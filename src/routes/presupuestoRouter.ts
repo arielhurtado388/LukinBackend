@@ -7,12 +7,22 @@ import {
   validarExistenciaPresupuesto,
   validarIdPresupuesto,
 } from "../middleware/presupuesto";
+import { GastoController } from "../controllers/GastoController";
+import {
+  validarEntradaGasto,
+  validarExistenciaGasto,
+  validarIdGasto,
+} from "../middleware/gasto";
 
 const router = Router();
 
 router.param("idPresupuesto", validarIdPresupuesto);
 router.param("idPresupuesto", validarExistenciaPresupuesto);
 
+router.param("idGasto", validarIdGasto);
+router.param("idGasto", validarExistenciaGasto);
+
+// Rutas para presupuestos
 router.post(
   "/",
   validarEntradaPresupuesto,
@@ -31,5 +41,21 @@ router.put(
 );
 
 router.delete("/:idPresupuesto", PresupuestoController.eliminarPorId);
+
+// Rutas para gastos
+router.post(
+  "/:idPresupuesto/gastos",
+  validarEntradaGasto,
+  handleErroresEntrada,
+  GastoController.crear
+);
+router.get("/:idPresupuesto/gastos/:idGasto", GastoController.obtenerPorId);
+router.put(
+  "/:idPresupuesto/gastos/:idGasto",
+  validarEntradaGasto,
+  handleErroresEntrada,
+  GastoController.editarPorId
+);
+router.delete("/:idPresupuesto/gastos/:idGasto", GastoController.eliminarPorId);
 
 export default router;
