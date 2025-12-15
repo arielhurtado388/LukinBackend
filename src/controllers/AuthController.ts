@@ -34,4 +34,23 @@ export class AuthController {
       res.status(500).json({ error: "Hubo un error" });
     }
   };
+
+  static confirmarCuenta = async (req: Request, res: Response) => {
+    const { token } = req.body;
+
+    const usuario = await Usuario.findOne({
+      where: { token },
+    });
+
+    if (!usuario) {
+      const error = new Error("El código no es válido");
+      return res.status(401).json({ error: error.message });
+    }
+
+    usuario.confirmado = true;
+    usuario.token = null;
+    await usuario.save();
+
+    res.json("Cuenta confirmada correctamente");
+  };
 }

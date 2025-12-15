@@ -18,4 +18,13 @@ router.post(
   AuthController.crearCuenta
 );
 
+router.post(
+  "/confirmar-cuenta",
+  body("token")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("El código no es válido"),
+  handleErroresEntrada,
+  AuthController.confirmarCuenta
+);
+
 export default router;
