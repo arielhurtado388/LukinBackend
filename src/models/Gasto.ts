@@ -5,6 +5,7 @@ import {
   DataType,
   BelongsTo,
   ForeignKey,
+  AllowNull,
 } from "sequelize-typescript";
 import Presupuesto from "./Presupuesto";
 
@@ -12,11 +13,13 @@ import Presupuesto from "./Presupuesto";
   tableName: "gastos",
 })
 class Gasto extends Model {
+  @AllowNull(false)
   @Column({
     type: DataType.STRING(60),
   })
   declare nombre: string;
 
+  @AllowNull(false)
   @Column({
     type: DataType.DECIMAL,
   })
