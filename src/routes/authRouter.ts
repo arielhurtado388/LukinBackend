@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AuthController } from "../controllers/AuthController";
 import { body } from "express-validator";
 import { handleErroresEntrada } from "../middleware/validacion";
+import { limiter } from "../config/limiter";
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.post(
 
 router.post(
   "/confirmar-cuenta",
+  limiter,
   body("token")
     .isLength({ min: 6, max: 6 })
     .withMessage("El código no es válido"),
