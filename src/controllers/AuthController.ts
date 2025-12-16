@@ -148,4 +148,8 @@ export class AuthController {
 
     res.json("Contraseña reestablecida correctamente");
   };
+
+  static usuario = async (req: Request, res: Response) => {
+    res.json(req.usuario);
+  };
 }

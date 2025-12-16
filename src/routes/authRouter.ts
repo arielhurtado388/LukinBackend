@@ -3,6 +3,7 @@ import { AuthController } from "../controllers/AuthController";
 import { body, param } from "express-validator";
 import { handleErroresEntrada } from "../middleware/validacion";
 import { limiter } from "../config/limiter";
+import { autenticar } from "../middleware/auth";
 
 const router = Router();
 
@@ -65,5 +66,7 @@ router.post(
   handleErroresEntrada,
   AuthController.resetearPasswordConToken
 );
+
+router.get("/usuario", autenticar, AuthController.usuario);
 
 export default router;
