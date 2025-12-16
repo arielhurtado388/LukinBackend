@@ -6,6 +6,8 @@ import { limiter } from "../config/limiter";
 
 const router = Router();
 
+router.use(limiter);
+
 router.post(
   "/crear-cuenta",
   body("nombre")
@@ -21,12 +23,19 @@ router.post(
 
 router.post(
   "/confirmar-cuenta",
-  limiter,
   body("token")
     .isLength({ min: 6, max: 6 })
     .withMessage("El código no es válido"),
   handleErroresEntrada,
   AuthController.confirmarCuenta
+);
+
+router.post(
+  "/iniciar-sesion",
+  body("correo").isEmail().withMessage("El correo no es válido"),
+  body("password").notEmpty().withMessage("La contraseña es obligatoria"),
+  handleErroresEntrada,
+  AuthController.iniciarSesion
 );
 
 export default router;
