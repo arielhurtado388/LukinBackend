@@ -87,4 +87,65 @@ export class AuthController {
     const token = generarJWT(usuario.id);
     res.json(token);
   };
+
+  static reestablecerPassword = async (req: Request, res: Response) => {
+    const { correo } = req.body;
+
+    const usuario = await Usuario.findOne({
+      where: {
+        correo,
+      },
+    });
+
+    if (!usuario) {
+      const error = new Error("Usuario no encontrado");
+      return res.status(404).json({ error: error.message });
+    }
+
+    usuario.token = generarToken();
+    await usuario.save();
+
+    await AuthCorreo.reestablecerPassword({
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      token: usuario.token,
+    });
+
+    res.json("Revisa tu correo y sigue las instrucciones");
+  };
+
+  static validarToken = async (req: Request, res: Response) => {
+    const { token } = req.body;
+
+    const existeToken = await Usuario.findOne({
+      where: { token },
+    });
+
+    if (!existeToken) {
+      const error = new Error("El código no es válido");
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.json("Código válido");
+  };
+
+  static resetearPasswordConToken = async (req: Request, res: Response) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const usuario = await Usuario.findOne({
+      where: { token },
+    });
+
+    if (!usuario) {
+      const error = new Error("El código no es válido");
+      return res.status(404).json({ error: error.message });
+    }
+
+    usuario.password = await hashPassword(password);
+    usuario.token = null;
+    await usuario.save();
+
+    res.json("Contraseña reestablecida correctamente");
+  };
 }
