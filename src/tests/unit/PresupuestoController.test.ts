@@ -2,6 +2,7 @@ import { createRequest, createResponse } from "node-mocks-http";
 import { presupuestos } from "../mocks/presupuestos";
 import { PresupuestoController } from "../../controllers/PresupuestoController";
 import Presupuesto from "../../models/Presupuesto";
+import Gasto from "../../models/Gasto";
 
 jest.mock("../../models/Presupuesto", () => ({
   findAll: jest.fn(),
@@ -158,5 +159,121 @@ describe("PresupuestoController.crear", () => {
 });
 
 describe("PresupuestoController.obtenerPorId", () => {
-  it("", async () => {});
+  beforeEach(() => {
+    (Presupuesto.findByPk as jest.Mock).mockImplementation((id) => {
+      const presupuesto = presupuestos.filter((p) => p.id === id)[0];
+      return Promise.resolve(presupuesto);
+    });
+  });
+
+  it("Debe obtener un presupuesto con el id: 1 y 3 gastos", async () => {
+    const req = createRequest({
+      method: "GET",
+      url: "/api/presupuestos/::idPresupuesto",
+      presupuesto: {
+        id: 1,
+      },
+    });
+
+    const res = createResponse();
+    await PresupuestoController.obtenerPorId(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(200);
+    expect(data.gastos).toHaveLength(3);
+    expect(Presupuesto.findByPk).toHaveBeenCalledTimes(1);
+    expect(Presupuesto.findByPk).toHaveBeenCalledWith(req.presupuesto.id, {
+      include: [Gasto],
+    });
+  });
+
+  it("Debe obtener un presupuesto con el id: 2 y 2 gastos", async () => {
+    const req = createRequest({
+      method: "GET",
+      url: "/api/presupuestos/::idPresupuesto",
+      presupuesto: {
+        id: 2,
+      },
+    });
+
+    const res = createResponse();
+    await PresupuestoController.obtenerPorId(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(200);
+    expect(data.gastos).toHaveLength(2);
+  });
+
+  it("Debe obtener un presupuesto con el id: 3 y 0 gastos", async () => {
+    const req = createRequest({
+      method: "GET",
+      url: "/api/presupuestos/::idPresupuesto",
+      presupuesto: {
+        id: 3,
+      },
+    });
+
+    const res = createResponse();
+    await PresupuestoController.obtenerPorId(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(200);
+    expect(data.gastos).toHaveLength(0);
+  });
+});
+
+describe("PresupuestoController.editarPorId", () => {
+  it("Debe actualizar el presupuesto y regresar un mensaje de exito", async () => {
+    const presupuestoMock = {
+      update: jest.fn().mockResolvedValue(true),
+    };
+
+    const req = createRequest({
+      method: "PUT",
+      url: "/api/presupuestos/:idPresupuesto",
+      presupuesto: presupuestoMock,
+      body: {
+        nombre: "Presupuesto Actualizado",
+        cantidad: "5000",
+      },
+    });
+
+    const res = createResponse();
+    await PresupuestoController.editarPorId(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(200);
+    expect(data).toBe("Presupuesto actualizado correctamente");
+    expect(presupuestoMock.update).toHaveBeenCalled();
+    expect(presupuestoMock.update).toHaveBeenCalledTimes(1);
+    expect(presupuestoMock.update).toHaveBeenCalledWith(req.body);
+  });
+});
+
+describe("PresupuestoController.editarPorId", () => {
+  it("Debe eliminar el presupuesto y regresar un mensaje de exito", async () => {
+    const presupuestoMock = {
+      destroy: jest.fn().mockResolvedValue(true),
+    };
+
+    const req = createRequest({
+      method: "DELETE",
+      url: "/api/presupuestos/:idPresupuesto",
+      presupuesto: presupuestoMock,
+    });
+
+    const res = createResponse();
+    await PresupuestoController.eliminarPorId(req, res);
+
+    const data = res._getJSONData();
+
+    expect(res.statusCode).toBe(200);
+    expect(data).toBe("Presupuesto eliminado correctamente");
+    expect(presupuestoMock.destroy).toHaveBeenCalled();
+    expect(presupuestoMock.destroy).toHaveBeenCalledTimes(1);
+  });
 });
