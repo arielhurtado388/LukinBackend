@@ -68,3 +68,15 @@ export const validarEntradaPresupuesto = async (
 
   next();
 };
+
+export function verificarAcceso(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (req.presupuesto.idUsuario !== req.usuario.id) {
+    const error = new Error("Acción no válida");
+    return res.status(401).json({ error: error.message });
+  }
+  next();
+}

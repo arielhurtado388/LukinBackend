@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { body, param } from "express-validator";
 import { PresupuestoController } from "../controllers/PresupuestoController";
 import { handleErroresEntrada } from "../middleware/validacion";
 import {
   validarEntradaPresupuesto,
   validarExistenciaPresupuesto,
   validarIdPresupuesto,
+  verificarAcceso,
 } from "../middleware/presupuesto";
 import { GastoController } from "../controllers/GastoController";
 import {
@@ -13,11 +13,15 @@ import {
   validarExistenciaGasto,
   validarIdGasto,
 } from "../middleware/gasto";
+import { autenticar } from "../middleware/auth";
 
 const router = Router();
 
+router.use(autenticar);
+
 router.param("idPresupuesto", validarIdPresupuesto);
 router.param("idPresupuesto", validarExistenciaPresupuesto);
+router.param("idPresupuesto", verificarAcceso);
 
 router.param("idGasto", validarIdGasto);
 router.param("idGasto", validarExistenciaGasto);

@@ -34,7 +34,7 @@ class Presupuesto extends Model {
   declare gastos: Gasto[];
 
   @ForeignKey(() => Usuario)
-  declare idusuario: number;
+  declare idUsuario: number;
 
   @BelongsTo(() => Usuario)
   declare usuario: Usuario;

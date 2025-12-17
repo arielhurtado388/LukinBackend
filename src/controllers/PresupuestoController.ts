@@ -6,6 +6,7 @@ export class PresupuestoController {
   static crear = async (req: Request, res: Response) => {
     try {
       const presupuesto = new Presupuesto(req.body);
+      presupuesto.idUsuario = req.usuario.id;
       await presupuesto.save();
       res.status(201).json("Presupuesto creado correctamente");
     } catch (error) {
@@ -16,8 +17,10 @@ export class PresupuestoController {
   static obtener = async (req: Request, res: Response) => {
     try {
       const presupuestos = await Presupuesto.findAll({
+        where: {
+          idUsuario: req.usuario.id,
+        },
         order: [["createdAt", "DESC"]],
-        // TODO: Filtrar por el usuario
       });
       res.json(presupuestos);
     } catch (error) {
