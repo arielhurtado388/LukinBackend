@@ -5,7 +5,7 @@ import Gasto from "../models/Gasto";
 export class PresupuestoController {
   static crear = async (req: Request, res: Response) => {
     try {
-      const presupuesto = new Presupuesto(req.body);
+      const presupuesto = await Presupuesto.create(req.body);
       presupuesto.idUsuario = req.usuario.id;
       await presupuesto.save();
       res.status(201).json("Presupuesto creado correctamente");
