@@ -4,7 +4,7 @@ import Gasto from "../models/Gasto";
 export class GastoController {
   static crear = async (req: Request, res: Response) => {
     try {
-      const gasto = new Gasto(req.body);
+      const gasto = await Gasto.create(req.body);
       gasto.idPresupuesto = req.presupuesto.id;
       await gasto.save();
       res.status(201).json("Gasto creado correctamente");
