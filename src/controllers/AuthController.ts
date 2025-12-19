@@ -19,7 +19,7 @@ export class AuthController {
     }
 
     try {
-      const usuario = new Usuario(req.body);
+      const usuario = await Usuario.create(req.body);
       usuario.password = await hashPassword(password);
       usuario.token = generarToken();
       await usuario.save();
@@ -30,7 +30,7 @@ export class AuthController {
         token: usuario.token,
       });
 
-      res.json("Cuenta creada correctamente");
+      res.status(201).json("Cuenta creada correctamente");
     } catch (error) {
       res.status(500).json({ error: "Hubo un error" });
     }
