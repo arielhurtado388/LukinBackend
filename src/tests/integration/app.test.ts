@@ -1,6 +1,9 @@
 import request from "supertest";
 import server, { conectarDB } from "../../server";
 import { AuthController } from "../../controllers/AuthController";
+import Usuario from "../../models/Usuario";
+import * as authHelpers from "../../helpers/auth";
+import * as jwtHelpers from "../../helpers/jwt";
 
 describe("Autenticacion - Crear cuenta", () => {
   it("Debe mostrar los errores cuando el formulario se envia vacio", async () => {
@@ -121,5 +124,157 @@ describe("Autenticacion - Confirmar cuenta con token", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toBe("Cuenta confirmada correctamente");
     expect(res.status).not.toBe(401);
+  });
+});
+
+describe("Autenticacion - Iniciar sesion", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("Debe mostrar los errores de validacion cuando se envia el formulario vacio", async () => {
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({});
+
+    const iniciarSesionMock = jest.spyOn(AuthController, "iniciarSesion");
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("errores");
+    expect(res.body.errores).toHaveLength(2);
+    expect(res.body.errores).not.toHaveLength(1);
+    expect(iniciarSesionMock).not.toHaveBeenCalled();
+  });
+
+  it("Debe mostrar el error 400 cuando el correo no es valido", async () => {
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({
+      correo: "not_valid",
+      password: "12345678",
+    });
+
+    const iniciarSesionMock = jest.spyOn(AuthController, "iniciarSesion");
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("errores");
+    expect(res.body.errores).toHaveLength(1);
+    expect(res.body.errores[0].msg).toBe("El correo no es válido");
+    expect(res.body.errores).not.toHaveLength(2);
+    expect(iniciarSesionMock).not.toHaveBeenCalled();
+  });
+
+  it("Debe mostrar el error 400 si el usuario no es encontrado", async () => {
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({
+      correo: "usuario_no_encontrado@test.com",
+      password: "12345678",
+    });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toBe("Usuario no encontrado");
+    expect(res.status).not.toBe(200);
+  });
+
+  it("Debe mostrar el error 403 si el usuario no esta confirmado", async () => {
+    (jest.spyOn(Usuario, "findOne") as jest.Mock).mockResolvedValue({
+      id: 1,
+      correo: "usuario_no_confirmado@test.com",
+      password: "hashedpassword",
+      confirmado: false,
+    });
+
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({
+      correo: "usuario_no_confirmado@test.com",
+      password: "12345678",
+    });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toBe("Cuenta no confirmada");
+    expect(res.status).not.toBe(200);
+    expect(res.status).not.toBe(404);
+  });
+
+  it("Debe mostrar el error 403 si el usuario no esta confirmado", async () => {
+    const datos = {
+      nombre: "Prueba",
+      correo: "usuario_no_confirmado@test.com",
+      password: "12345678",
+    };
+
+    await request(server).post("/api/auth/crear-cuenta").send(datos);
+
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({
+      correo: datos.correo,
+      password: datos.password,
+    });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toBe("Cuenta no confirmada");
+    expect(res.status).not.toBe(200);
+    expect(res.status).not.toBe(404);
+  });
+
+  it("Debe mostrar el error 401 si la contraseña no es correcta", async () => {
+    const findOne = (
+      jest.spyOn(Usuario, "findOne") as jest.Mock
+    ).mockResolvedValue({
+      id: 1,
+      password: "hashedPassword",
+      confirmado: true,
+    });
+
+    const verificarPassword = jest
+      .spyOn(authHelpers, "verificarPassword")
+      .mockResolvedValue(false);
+
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({
+      correo: "test@test.com",
+      password: "passwordIncorrecto",
+    });
+
+    expect(res.status).toBe(401);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toBe("Contraseña incorrecta");
+    expect(res.status).not.toBe(200);
+    expect(res.status).not.toBe(404);
+    expect(res.status).not.toBe(403);
+    expect(findOne).toHaveBeenCalledTimes(1);
+    expect(verificarPassword).toHaveBeenCalledTimes(1);
+  });
+
+  it("Debe generar y verificar el JWT", async () => {
+    const findOne = (
+      jest.spyOn(Usuario, "findOne") as jest.Mock
+    ).mockResolvedValue({
+      id: 1,
+      password: "hashedPassword",
+      confirmado: true,
+    });
+
+    const verificarPassword = jest
+      .spyOn(authHelpers, "verificarPassword")
+      .mockResolvedValue(true);
+
+    const generarJWT = jest
+      .spyOn(jwtHelpers, "generarJWT")
+      .mockReturnValue("jwt_token");
+
+    const res = await request(server).post("/api/auth/iniciar-sesion").send({
+      correo: "test@test.com",
+      password: "passwordCorrecto",
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual("jwt_token");
+    expect(findOne).toHaveBeenCalled();
+    expect(findOne).toHaveBeenCalledTimes(1);
+    expect(verificarPassword).toHaveBeenCalled();
+    expect(verificarPassword).toHaveBeenCalledTimes(1);
+    expect(verificarPassword).toHaveBeenCalledWith(
+      "passwordCorrecto",
+      "hashedPassword"
+    );
+    expect(generarJWT).toHaveBeenCalled();
+    expect(generarJWT).toHaveBeenCalledTimes(1);
+    expect(generarJWT).toHaveBeenCalledWith(1);
   });
 });
