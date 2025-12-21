@@ -19,7 +19,7 @@ export class AuthCorreo {
         <p>e ingresa el código: <b>${usuario.token}</b></p>
       `,
     });
-    console.log("Mensaje enviado", correo.messageId);
+    // console.log("Mensaje enviado", correo.messageId);
   };
 
   static reestablecerPassword = async (usuario: CorreoType) => {
@@ -34,6 +34,6 @@ export class AuthCorreo {
         <p>e ingresa el código: <b>${usuario.token}</b></p>
       `,
     });
-    console.log("Mensaje enviado", correo.messageId);
+    // console.log("Mensaje enviado", correo.messageId);
   };
 }
