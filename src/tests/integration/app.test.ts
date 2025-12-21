@@ -88,3 +88,38 @@ describe("Autenticacion - Crear cuenta", () => {
     expect(res.status).not.toBe(400);
   });
 });
+
+describe("Autenticacion - Confirmar cuenta con token", () => {
+  it("Debe mostrar el error si el token esta vacio o no es valido", async () => {
+    const res = await request(server).post("/api/auth/confirmar-cuenta").send({
+      token: "not_valid",
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("errores");
+    expect(res.body.errores).toHaveLength(1);
+    expect(res.body.errores[0].msg).toBe("El código no es válido");
+  });
+
+  it("Debe verificar que el token existe", async () => {
+    const res = await request(server).post("/api/auth/confirmar-cuenta").send({
+      token: "123456",
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toBe("El código no es válido");
+    expect(res.status).not.toBe(200);
+  });
+
+  it("Debe confirmar la cuenta con el token valido y existente", async () => {
+    const token = globalThis.tokenConfirmacionLukin;
+    const res = await request(server).post("/api/auth/confirmar-cuenta").send({
+      token,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("Cuenta confirmada correctamente");
+    expect(res.status).not.toBe(401);
+  });
+});

@@ -21,7 +21,11 @@ export class AuthController {
     try {
       const usuario = await Usuario.create(req.body);
       usuario.password = await hashPassword(password);
-      usuario.token = generarToken();
+      const token = generarToken();
+      usuario.token = token;
+      if (process.env.NODE_ENV !== "production") {
+        globalThis.tokenConfirmacionLukin = token;
+      }
       await usuario.save();
 
       await AuthCorreo.enviarConfirmacion({
