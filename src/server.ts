@@ -5,7 +5,7 @@ import { db } from "./config/db";
 import presupuestoRouter from "./routes/presupuestoRouter";
 import authRouter from "./routes/authRouter";
 
-async function conectarDB() {
+export async function conectarDB() {
   try {
     await db.authenticate();
     db.sync();
