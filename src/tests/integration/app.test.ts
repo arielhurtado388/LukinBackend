@@ -278,3 +278,63 @@ describe("Autenticacion - Iniciar sesion", () => {
     expect(generarJWT).toHaveBeenCalledWith(1);
   });
 });
+
+describe("GET /api/presupuestos", () => {
+  let jwt: string;
+
+  beforeAll(() => {
+    jest.restoreAllMocks(); // Restaura los jest.spyOn a su implementacion original
+  });
+
+  beforeAll(async () => {
+    const response = await request(server)
+      .post("/api/auth/iniciar-sesion")
+      .send({
+        correo: "test@test.com",
+        password: "12345678",
+      });
+    jwt = response.body;
+    expect(response.status).toBe(200);
+  });
+
+  it("Debe rechazar usuarios no autenticados y sin jwt", async () => {
+    const res = await request(server).get("/api/presupuestos");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("No autorizado");
+  });
+
+  it("Debe rechazar usuarios no autenticados y con jwt que no es valido", async () => {
+    const res = await request(server)
+      .get("/api/presupuestos")
+      .auth("jwt_no_valido", { type: "bearer" });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe("El código no es válido");
+  });
+
+  it("Debe permitir acceso autenticado y con jwt valido", async () => {
+    const res = await request(server)
+      .get("/api/presupuestos")
+      .auth(jwt, { type: "bearer" });
+
+    expect(res.status).not.toBe(401);
+    expect(res.body.error).not.toBe("No autorizado");
+    expect(res.body).toHaveLength(0);
+  });
+});
+
+describe("POST /api/presupuestos", () => {
+  let jwt: string;
+
+  beforeAll(async () => {
+    const response = await request(server)
+      .post("/api/auth/iniciar-sesion")
+      .send({
+        correo: "test@test.com",
+        password: "12345678",
+      });
+    jwt = response.body;
+    expect(response.status).toBe(200);
+  });
+});
