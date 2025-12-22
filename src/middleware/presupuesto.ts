@@ -18,8 +18,10 @@ export const validarIdPresupuesto = async (
   await param("idPresupuesto")
     .isInt()
     .withMessage("El id no es válido")
+    .bail()
     .custom((value) => value > 0)
     .withMessage("El id no es válido")
+    .bail()
     .run(req);
 
   let errores = validationResult(req);

@@ -348,4 +348,134 @@ describe("POST /api/presupuestos", () => {
     expect(res.body.errores).toHaveLength(3);
     expect(res.status).not.toBe(201);
   });
+
+  it("Debe crear el presupuesto", async () => {
+    const res = await request(server)
+      .post("/api/presupuestos")
+      .auth(jwt, { type: "bearer" })
+      .send({
+        nombre: "Prueba Presupuesto",
+        cantidad: 1000,
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual("Presupuesto creado correctamente");
+    expect(res.status).not.toBe(400);
+  });
+});
+
+describe("GET /api/presupuestos/:idPresupuesto", () => {
+  beforeAll(async () => {
+    await autenticarUsuario();
+  });
+
+  it("Debe rechazar usuarios no autenticados y sin jwt en el metodo GET", async () => {
+    const res = await request(server).get("/api/presupuestos/1");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("No autorizado");
+  });
+
+  it("Debe mostrar los errores con una url no valida", async () => {
+    const res = await request(server)
+      .get("/api/presupuestos/not_valid")
+      .auth(jwt, { type: "bearer" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errores).toBeDefined();
+    expect(res.body.errores).toBeTruthy();
+    expect(res.status).not.toBe(401);
+    expect(res.body.errores).toHaveLength(1);
+    expect(res.body.errores[0].msg).toBe("El id no es válido");
+  });
+
+  it("Debe mostrar el error cuando no encuentra el presupuesto", async () => {
+    const res = await request(server)
+      .get("/api/presupuestos/300")
+      .auth(jwt, { type: "bearer" });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe("El presupuesto no existe");
+    expect(res.status).not.toBe(400);
+    expect(res.status).not.toBe(401);
+  });
+
+  it("Debe mostrar el presupuesto con id: 1", async () => {
+    const res = await request(server)
+      .get("/api/presupuestos/1")
+      .auth(jwt, { type: "bearer" });
+
+    expect(res.status).toBe(200);
+    expect(res.status).not.toBe(400);
+    expect(res.status).not.toBe(401);
+    expect(res.status).not.toBe(404);
+  });
+});
+
+describe("PUT /api/presupuestos/:idPresupuesto", () => {
+  beforeAll(async () => {
+    await autenticarUsuario();
+  });
+
+  it("Debe rechazar usuarios no autenticados y sin jwt en el metodo PUT", async () => {
+    const res = await request(server).put("/api/presupuestos/1");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("No autorizado");
+  });
+
+  it("Debe mostrar validacion si el formulario esta vacio", async () => {
+    const res = await request(server)
+      .put("/api/presupuestos/1")
+      .auth(jwt, { type: "bearer" })
+      .send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.errores).toBeTruthy();
+    expect(res.body.errores).toHaveLength(3);
+  });
+
+  it("Debe actualizar el presupuesto", async () => {
+    const res = await request(server)
+      .put("/api/presupuestos/1")
+      .auth(jwt, { type: "bearer" })
+      .send({
+        nombre: "Prueba Actualizada",
+        cantidad: 500,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toBe("Presupuesto actualizado correctamente");
+  });
+});
+
+describe("DELETE /api/presupuestos/:idPresupuesto", () => {
+  beforeAll(async () => {
+    await autenticarUsuario();
+  });
+
+  it("Debe rechazar usuarios no autenticados y sin jwt en el metodo DELETE", async () => {
+    const res = await request(server).delete("/api/presupuestos/1");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("No autorizado");
+  });
+
+  it("Debe mostrar el error 404 si no existe", async () => {
+    const res = await request(server)
+      .delete("/api/presupuestos/300")
+      .auth(jwt, { type: "bearer" });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe("El presupuesto no existe");
+  });
+
+  it("Debe eliminar el presupuesto", async () => {
+    const res = await request(server)
+      .delete("/api/presupuestos/1")
+      .auth(jwt, { type: "bearer" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toBe("Presupuesto eliminado correctamente");
+  });
 });
