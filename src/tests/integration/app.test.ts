@@ -279,22 +279,24 @@ describe("Autenticacion - Iniciar sesion", () => {
   });
 });
 
-describe("GET /api/presupuestos", () => {
-  let jwt: string;
+let jwt: string;
 
+async function autenticarUsuario() {
+  const response = await request(server).post("/api/auth/iniciar-sesion").send({
+    correo: "test@test.com",
+    password: "12345678",
+  });
+  jwt = response.body;
+  expect(response.status).toBe(200);
+}
+
+describe("GET /api/presupuestos", () => {
   beforeAll(() => {
     jest.restoreAllMocks(); // Restaura los jest.spyOn a su implementacion original
   });
 
   beforeAll(async () => {
-    const response = await request(server)
-      .post("/api/auth/iniciar-sesion")
-      .send({
-        correo: "test@test.com",
-        password: "12345678",
-      });
-    jwt = response.body;
-    expect(response.status).toBe(200);
+    await autenticarUsuario();
   });
 
   it("Debe rechazar usuarios no autenticados y sin jwt", async () => {
@@ -325,16 +327,25 @@ describe("GET /api/presupuestos", () => {
 });
 
 describe("POST /api/presupuestos", () => {
-  let jwt: string;
-
   beforeAll(async () => {
-    const response = await request(server)
-      .post("/api/auth/iniciar-sesion")
-      .send({
-        correo: "test@test.com",
-        password: "12345678",
-      });
-    jwt = response.body;
-    expect(response.status).toBe(200);
+    await autenticarUsuario();
+  });
+
+  it("Debe rechazar usuarios no autenticados y sin jwt en el metodo POST", async () => {
+    const res = await request(server).post("/api/presupuestos");
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("No autorizado");
+  });
+
+  it("Debe mostrar la validacion al enviar el formulario vacio", async () => {
+    const res = await request(server)
+      .post("/api/presupuestos")
+      .auth(jwt, { type: "bearer" })
+      .send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.errores).toHaveLength(3);
+    expect(res.status).not.toBe(201);
   });
 });
