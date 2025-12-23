@@ -28,11 +28,11 @@ export class AuthController {
       }
       await usuario.save();
 
-      await AuthCorreo.enviarConfirmacion({
-        nombre: usuario.nombre,
-        correo: usuario.correo,
-        token: usuario.token,
-      });
+      // await AuthCorreo.enviarConfirmacion({
+      //   nombre: usuario.nombre,
+      //   correo: usuario.correo,
+      //   token: usuario.token,
+      // });
 
       res.status(201).json("Cuenta creada correctamente");
     } catch (error) {
