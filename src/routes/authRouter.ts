@@ -92,4 +92,13 @@ router.post(
   AuthController.verificarPassword
 );
 
+router.put(
+  "/actualizar-perfil",
+  autenticar,
+  body("nombre").notEmpty().withMessage("El nombre es obligatorio"),
+  body("correo").isEmail().withMessage("El correo no es válido"),
+  handleErroresEntrada,
+  AuthController.actualizarPerfil
+);
+
 export default router;

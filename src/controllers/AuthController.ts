@@ -195,4 +195,28 @@ export class AuthController {
 
     res.json("Contraseña correcta");
   };
+
+  static actualizarPerfil = async (req: Request, res: Response) => {
+    const { nombre, correo } = req.body;
+
+    const existeUsuario = await Usuario.findOne({
+      where: {
+        correo,
+      },
+    });
+
+    if (existeUsuario && existeUsuario.id !== req.usuario.id) {
+      const error = new Error("El correo ya está registrado");
+      return res.status(409).json({ error: error.message });
+    }
+
+    req.usuario.nombre = nombre;
+    req.usuario.correo = correo;
+    try {
+      await req.usuario.save();
+      res.json("Perfil actualizado correctamente");
+    } catch (error) {
+      res.status(500).json({ error: "Hubo un error" });
+    }
+  };
 }
