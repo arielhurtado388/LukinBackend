@@ -2,6 +2,7 @@ import { Router } from "express";
 import { PresupuestoController } from "../controllers/PresupuestoController";
 import { handleErroresEntrada } from "../middleware/validacion";
 import {
+  belongsToPresupuesto,
   validarEntradaPresupuesto,
   validarExistenciaPresupuesto,
   validarIdPresupuesto,
@@ -25,6 +26,7 @@ router.param("idPresupuesto", verificarAcceso);
 
 router.param("idGasto", validarIdGasto);
 router.param("idGasto", validarExistenciaGasto);
+router.param("idGasto", belongsToPresupuesto);
 
 // Rutas para presupuestos
 router.post(

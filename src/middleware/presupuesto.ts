@@ -82,3 +82,15 @@ export function verificarAcceso(
   }
   next();
 }
+
+export const belongsToPresupuesto = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.presupuesto.id !== req.gasto.idPresupuesto) {
+    const error = new Error("Acción no válida");
+    return res.status(403).json({ error: error.message });
+  }
+  next();
+};
